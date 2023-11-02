@@ -1,5 +1,5 @@
 const API_URL = 'https://playswap-server.azurewebsites.net';
-
+//const API_URL = 'http://localhost:5240';
 let token = '';
 
 const apiWrapper = {
@@ -58,7 +58,7 @@ const apiWrapper = {
     return await response.json();
   },
   async getInfluences(playlistId) {
-    const response = await fetch(`${API_URL}/Playlist/${playlistId}/Influences`, {
+    const response = await fetch(`${API_URL}/Playlist/${playlistId}/Influence`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -66,7 +66,7 @@ const apiWrapper = {
     return await response.json();
   },
   async createInfluence(playlistId, data) {
-    const response = await fetch(`${API_URL}/Playlist/${playlistId}/Influences`, {
+    const response = await fetch(`${API_URL}/Playlist/${playlistId}/Influence`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -77,7 +77,7 @@ const apiWrapper = {
     return await response.json();
   },
   async deleteInfluences(playlistId) {
-    const response = await fetch(`${API_URL}/Playlist/${playlistId}/Influences`, {
+    const response = await fetch(`${API_URL}/Playlist/${playlistId}/Influence`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`

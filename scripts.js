@@ -1,4 +1,8 @@
 import apiWrapper from './apiWrapper.js';
+// On page load, show the 'Create Playlist' tab
+window.onload = function() {
+    showTab('create');
+}
 
 function showTab(tabId) {
     const tabs = document.querySelectorAll('.tab-content');
@@ -12,25 +16,25 @@ function setToken() {
     apiWrapper.setToken(token);
 }
 
+
+
 async function createPlaylist() {
+    const playlistName = document.getElementById('name').value;
+    const playlistDescription = document.getElementById('description').value;
     const influences = [];
     const influenceInputs = document.querySelectorAll('.influence-input');
     for(let i=0; i<influenceInputs.length; i++) {
-        influences.push({ spotifyId: influenceInputs[i].value });
+        influences.push({ uri: influenceInputs[i].value });
     }
 
     const playlistData = {
         name: playlistName,
         description: playlistDescription,
-        genre: playlistGenre,
-        subGenre: playlistSubGenre,
-        coverImage: playlistCoverImage
-        //... (any other fields)
+        //... other fields
     };
 
     try {
         const createdPlaylist = await apiWrapper.createPlaylist(playlistData);
-
         for (const influence of influences) {
             await apiWrapper.createInfluence(createdPlaylist.id, influence);
         }
@@ -47,16 +51,22 @@ async function showPlaylists() {
     try {
         const playlists = await apiWrapper.getPlaylists();
         const container = document.getElementById('dashboard');
-        container.innerHTML = ''; // Clear existing content
+        container.innerHTML = '';
 
         if (playlists && playlists.length > 0) {
             playlists.forEach(playlist => {
                 const div = document.createElement('div');
                 div.className = 'playlist';
+                
+                const deleteButton = document.createElement('button');
+                deleteButton.innerText = 'Delete';
+                deleteButton.addEventListener('click', () => deletePlaylist(playlist.id));
+                
                 div.innerHTML = `
-                    <h3>${playlist.name}</h3>
+                    <h3>${playlist.title}</h3>
                     <p>${playlist.description}</p>
                 `;
+                div.appendChild(deleteButton);
                 container.appendChild(div);
             });
         } else {
@@ -69,12 +79,17 @@ async function showPlaylists() {
 }
 
 
-
-// On page load, show the 'Create Playlist' tab
-window.onload = function() {
-    showTab('create');
+async function deletePlaylist(playlistId) {
+    try {
+        await apiWrapper.deletePlaylist(playlistId);
+        await showPlaylists();  // Refresh the playlist display
+    } catch (error) {
+        console.error('Error deleting playlist:', error);
+        alert('Failed to delete playlist');
+    }
 }
-let influenceCount = 1;
+
+
 
 function addInfluence() {
     // Create a new input field
