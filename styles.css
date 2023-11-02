@@ -1,0 +1,76 @@
+/* styles.css */
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background-color: #f4f4f4;
+}
+
+.token-input-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+#tokenInput {
+    flex: 1;
+    padding: 10px;
+    margin-right: 20px;
+}
+
+#setTokenButton {
+    padding: 10px 20px;
+}
+
+.tabs {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.tabs button {
+    flex: 1;
+    padding: 10px 20px;
+    cursor: pointer;
+}
+
+.tab-content {
+    display: none; /* Initially hide content */
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+/* Display the Create Playlist tab by default */
+#showCreateTab:checked + #create {
+    display: block;
+}
+
+#showDashboardTab:checked + #dashboard {
+    display: block;
+}
+
+#name, #description, #user {
+    width: 30%;
+    padding: 10px;
+    margin: 0 10px 20px 0;
+}
+
+.influence-input {
+    width: 70%;
+    padding: 10px;
+    margin-bottom: 20px;
+}
+.influence-row {
+    display: flex; /* This will line up the items horizontally */
+    align-items: center; /* This vertically aligns the items in the middle */
+    gap: 10px; /* This will create a small gap between the input and the button */
+}
+
+
+button {
+    padding: 10px 20px;
+    cursor: pointer;
+    margin-right: 10px;
+}
