@@ -24,7 +24,8 @@ async function createPlaylist() {
     const influences = [];
     const influenceInputs = document.querySelectorAll('.influence-input');
     for(let i=0; i<influenceInputs.length; i++) {
-        influences.push({ uri: influenceInputs[i].value });
+        //the use of uri is misguding here but it is a quirk of the backend to mix uri and id
+        influences.push({ uri: url_to_id(influenceInputs[i].value, "playlist") });
     }
 
     const playlistData = {
@@ -77,53 +78,7 @@ async function showPlaylists() {
 
         if (playlists && playlists.length > 0) {
             playlists.forEach(playlist => {
-                const div = document.createElement('div');
-                div.className = 'playlist';
-                
-                // Create the tracklist button
-                const tracklistButton = document.createElement('button');
-                tracklistButton.innerText = 'Tracklist';
-                // Set a data attribute to store the playlist ID
-                tracklistButton.setAttribute('data-playlist-id', playlist.id);
-                tracklistButton.addEventListener('click', toggleTracklist);
-                
-                // Create the delete button
-                const deleteButton = document.createElement('button');
-                deleteButton.innerText = 'Delete';
-                deleteButton.addEventListener('click', () => deletePlaylist(playlist.id));
-
-                // Create the influence button
-                const influenceButton = document.createElement('button');
-                influenceButton.innerText = 'Influences';
-                // Set a data attribute to store the playlist ID
-                influenceButton.setAttribute('data-playlist-id', playlist.id);
-                influenceButton.addEventListener('click', toggleInfluenceList);
-                
-                div.innerHTML = `
-                    <h3>${playlist.title}</h3>
-                `;  
-                
-                // Immediately create and append the tracklistDiv after the tracklistButton
-                // Give your tracklistDiv a unique ID based on the playlist ID
-                const tracklistDiv = document.createElement('div');
-                tracklistDiv.id = `tracklist-${playlist.id}`;
-                tracklistDiv.className = 'tracklist';
-                tracklistDiv.style.display = 'none'; // Initially hide the tracklist
-
-                // Append the elements to the playlist div
-
-                // Placeholder element for the influence list
-                const influenceDiv = document.createElement('div');
-                influenceDiv.id = `influence-for-${playlist.id}`; // Ensure this ID is unique
-                influenceDiv.className = 'influence';
-                influenceDiv.style.display = 'none'; // Initially hide the influence list
-                
-                // Append the buttons and tracklistDiv in the correct order
-                div.appendChild(tracklistButton);
-                div.appendChild(influenceButton);
-                div.appendChild(deleteButton);
-                div.appendChild(tracklistDiv); // The tracklistDiv is now in between the tracklistButton and deleteButton
-                div.appendChild(influenceDiv);
+                const div = createPlaylistDiv(playlist);
                 container.appendChild(div);
             });
         } else {
@@ -135,10 +90,116 @@ async function showPlaylists() {
     }
 }
 
+function createPlaylistDiv(playlist) {
+    const div = document.createElement('div');
+    div.className = 'playlist';
+
+    // Check if the playlist has a Spotify URI and convert it to an anchor tag if it exists
+    if (playlist.spotifyURI) {
+        const url = uri_to_url(playlist.spotifyURI); // Ensure that uri_to_url function exists and works as expected
+        div.innerHTML = `<h3><a href="${url}" target="_blank">${playlist.title}</a></h3>`;
+    } else {
+        div.innerHTML = `<h3>${playlist.title}</h3>`;
+    }
+
+    const tracklistButton = createButton('Tracklist', toggleTracklist, playlist.id);
+    const deleteButton = createButton('Delete', () => deletePlaylist(playlist.id));
+    const influenceButton = createButton('Influences', toggleInfluenceList, playlist.id);
+
+    const tracklistDiv = createTracklistDiv(playlist.id);
+    const influenceDiv = createInfluenceDiv(playlist.id);
+
+    // Create and append the "Add Track" button and its div
+    const { addTrackButton, addTrackDiv } = createAddTrackElements(playlist.id);
+
+    div.appendChild(tracklistButton);
+    div.appendChild(influenceButton);
+    div.appendChild(addTrackButton); // Append the "Add Track" button
+    div.appendChild(deleteButton);
+    div.appendChild(tracklistDiv);
+    div.appendChild(influenceDiv);
+    div.appendChild(addTrackDiv); // Append the div for adding tracks
+
+    return div;
+}
+
+function createButton(text, eventListener, playlistId) {
+    const button = document.createElement('button');
+    button.innerText = text;
+    button.setAttribute('data-playlist-id', playlistId);
+    button.addEventListener('click', eventListener);
+    return button;
+}
+
+function createTracklistDiv(playlistId) {
+    const tracklistDiv = document.createElement('div');
+    tracklistDiv.id = `tracklist-for-${playlistId}`;
+    tracklistDiv.className = 'tracklist';
+    tracklistDiv.style.display = 'none';
+    return tracklistDiv;
+}
+
+function createInfluenceDiv(playlistId) {
+    const influenceDiv = document.createElement('div');
+    influenceDiv.id = `influence-for-${playlistId}`;
+    influenceDiv.className = 'influence';
+    influenceDiv.style.display = 'none';
+    return influenceDiv;
+}
+
+// New function to create the "Add Track" button and its corresponding input and submit elements
+function createAddTrackElements(playlistId) {
+    const addTrackButton = createButton('Add Track', toggleAddTrackInput, playlistId);
+    const addTrackDiv = document.createElement('div');
+    addTrackDiv.id = `add-track-for-${playlistId}`;
+    addTrackDiv.className = 'add-track';
+    addTrackDiv.style.display = 'none';
+  
+    // Input for the track URL
+    const trackUrlInput = document.createElement('input');
+    trackUrlInput.type = 'text';
+    trackUrlInput.placeholder = 'Track URL';
+    trackUrlInput.className = 'track-url-input';
+  
+    // Submit button for adding the track
+    const submitTrackButton = createButton('Submit', () => submitTrack(playlistId, trackUrlInput));
+    submitTrackButton.className = 'submit-track-button';
+  
+    // Append the input and submit button to the addTrackDiv
+    addTrackDiv.appendChild(trackUrlInput);
+    addTrackDiv.appendChild(submitTrackButton);
+  
+    return { addTrackButton, addTrackDiv };
+  }
+  
+  
+  // Function to submit the track and clear the input
+async function submitTrack(playlistId, trackUrlInput) {
+    try {
+      const spotifyId = url_to_id(trackUrlInput.value, 'track');
+      await apiWrapper.createPriorityTrack(playlistId, spotifyId);
+      // Clear the input field after successful submission
+      trackUrlInput.value = '';
+      // Hide the add track section after submission
+      const addTrackDiv = document.getElementById(`add-track-for-${playlistId}`);
+      if (addTrackDiv) {
+        addTrackDiv.style.display = 'none';
+      }
+    } catch (error) {
+      console.error('Error adding track:', error);
+      alert('Failed to add track');
+    }
+  }
+  
+
+
+
+
 async function toggleTracklist(event) {
     const playlistId = event.target.getAttribute('data-playlist-id');
+    hideOtherSections(playlistId, 'tracklist');
     // Use getElementById to select the tracklistDiv directly
-    const tracklistDiv = document.getElementById(`tracklist-${playlistId}`);
+    const tracklistDiv = document.getElementById(`tracklist-for-${playlistId}`);
     // Check if tracklist is already loaded
     if (tracklistDiv.innerHTML === '') {
         // Call the method to get the tracklist from the API
@@ -168,6 +229,7 @@ async function toggleTracklist(event) {
 // New function to toggle the influence list
 async function toggleInfluenceList(event) {
     const playlistId = event.target.getAttribute('data-playlist-id');
+    hideOtherSections(playlistId, 'influence');
     const influenceDivId = `influence-for-${playlistId}`;
     const influenceDiv = document.getElementById(influenceDivId);
 
@@ -189,6 +251,14 @@ async function toggleInfluenceList(event) {
     }
 }
 
+ // Function to toggle the add track input field
+function toggleAddTrackInput(event) {
+    const playlistId = event.target.getAttribute('data-playlist-id');
+    hideOtherSections(playlistId, 'add-track');
+    const addTrackDiv = document.getElementById(`add-track-for-${playlistId}`);
+    addTrackDiv.style.display = addTrackDiv.style.display === 'none' ? 'block' : 'none';
+}
+
 
 async function deletePlaylist(playlistId) {
     try {
@@ -200,6 +270,29 @@ async function deletePlaylist(playlistId) {
     }
 }
 
+// Function to hide all sections except the one that is being toggled
+function hideOtherSections(playlistId, sectionToShow) {
+  const sections = ['tracklist', 'influence', 'add-track'];
+  sections.forEach(section => {
+    if (section !== sectionToShow) {
+      const div = document.getElementById(`${section}-for-${playlistId}`);
+      if (div) {
+        div.style.display = 'none';
+      }
+    }
+  });
+
+  // Also remove the active class from all buttons except the one clicked
+  const buttons = ['tracklist', 'influence', 'add-track'];
+  buttons.forEach(button => {
+    if (button !== sectionToShow) {
+      const btn = document.querySelector(`[data-playlist-id="${playlistId}"].${button}-btn`);
+      if (btn) {
+        btn.classList.remove('button-active');
+      }
+    }
+  });
+}
 
 
 
@@ -221,7 +314,32 @@ document.addEventListener('DOMContentLoaded', (event) => {
             await showPlaylists();
         });
     };
-}
-    
-    // other code that needs to run after the DOM is loaded
+}     // other code that needs to run after the DOM is loaded
 )
+
+function url_to_id(url, type) {
+    if (!['track', 'playlist', 'album'].includes(type)) {
+      throw new Error('Invalid type specified. Type must be one of "track", "playlist", or "album".');
+    }
+  
+    // This pattern dynamically inserts the specified type into the regular expression
+    const pattern = new RegExp(`${type}/([a-zA-Z0-9]+)(?:\\?|$)`);
+    const match = url.match(pattern);
+  
+    if (match) {
+      return match[1];
+    } else {
+      throw new Error(`Not the right Spotify object (should be ${type})`);
+    }
+  }
+
+
+function uri_to_url(uri) {
+    const parts = uri.split(':');
+    if (parts.length === 3 && (parts[0] === 'spotify') && (parts[1] === 'playlist' || parts[1] === 'track')) {
+      return `https://open.spotify.com/${parts[1]}/${parts[2]}`;
+    } else {
+      throw new Error('Invalid Spotify URI');
+    }
+  }
+  

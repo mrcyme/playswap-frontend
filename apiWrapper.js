@@ -94,7 +94,7 @@ const apiWrapper = {
     return await response.json();
   },
   async createPriorityTrack(playlistId, trackId) {
-    const response = await fetch(`${API_URL}/Playlist/${playlistId}/Track?${trackId}`, {
+    const response = await fetch(`${API_URL}/Playlist/${playlistId}/Track?spotifyTrackUri=${trackId}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
