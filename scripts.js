@@ -19,12 +19,15 @@ function setToken() {
 
 
 async function createPlaylist() {
-    const playlistName = document.getElementById('name').value;
-    const playlistDescription = document.getElementById('description').value;
-    const influences = [];
+    const playlistNameInput = document.getElementById('name');
+    const playlistDescriptionInput = document.getElementById('description');
     const influenceInputs = document.querySelectorAll('.influence-input');
-    for(let i=0; i<influenceInputs.length; i++) {
-        //the use of uri is misguding here but it is a quirk of the backend to mix uri and id
+
+    const playlistName = playlistNameInput.value;
+    const playlistDescription = playlistDescriptionInput.value;
+    const influences = [];
+
+    for (let i = 0; i < influenceInputs.length; i++) {
         influences.push({ uri: url_to_id(influenceInputs[i].value, "playlist") });
     }
 
@@ -40,12 +43,22 @@ async function createPlaylist() {
             await apiWrapper.createInfluence(createdPlaylist.id, influence);
         }
 
+        // Notify the user
         alert('Playlist created successfully!');
+
+        // Clear the input fields
+        playlistNameInput.value = '';
+        playlistDescriptionInput.value = '';
+        influenceInputs.forEach(input => {
+            input.value = '';
+        });
+
     } catch (error) {
         console.error('Error creating playlist:', error);
         alert('Failed to create playlist');
     }
 }
+
 
 function addInfluence() {
     // Create a new input field
