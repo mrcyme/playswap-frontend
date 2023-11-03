@@ -123,15 +123,20 @@ function createPlaylistDiv(playlist) {
     const influenceDiv = createInfluenceDiv(playlist.id);
 
     // Create and append the "Add Track" button and its div
-    const { addTrackButton, addTrackDiv } = createAddTrackElements(playlist.id);
+    const { addTrackButton, addTrackDiv } = createAddTrackElements(playlist.id);// Create and append the "Add Influence" button and its div
+    const { addInfluenceButton, addInfluenceDiv } = createAddInfluenceElements(playlist.id);
 
     div.appendChild(tracklistButton);
     div.appendChild(influenceButton);
     div.appendChild(addTrackButton); // Append the "Add Track" button
+    div.appendChild(addInfluenceButton); // Append the "Add Influence" button
     div.appendChild(deleteButton);
     div.appendChild(tracklistDiv);
     div.appendChild(influenceDiv);
     div.appendChild(addTrackDiv); // Append the div for adding tracks
+    // Append the "Add Influence" button and div
+    div.appendChild(addInfluenceDiv);
+    
 
     return div;
 }
@@ -185,6 +190,7 @@ function createAddTrackElements(playlistId) {
     return { addTrackButton, addTrackDiv };
   }
   
+
   
   // Function to submit the track and clear the input
 async function submitTrack(playlistId, trackUrlInput) {
@@ -203,7 +209,57 @@ async function submitTrack(playlistId, trackUrlInput) {
       alert('Failed to add track');
     }
   }
+
+// New function to create the "Add Influence" button and its corresponding input and submit elements
+function createAddInfluenceElements(playlistId) {
+    const addInfluenceButton = createButton('Add Influence', toggleAddInfluenceInput, playlistId);
+    const addInfluenceDiv = document.createElement('div');
+    addInfluenceDiv.id = `add-influence-for-${playlistId}`;
+    addInfluenceDiv.className = 'add-influence';
+    addInfluenceDiv.style.display = 'none';
   
+    // Input for the influence URL
+    const influenceUriInput = document.createElement('input');
+    influenceUriInput.type = 'text';
+    influenceUriInput.placeholder = 'Influence URL';
+    influenceUriInput.className = 'influence-uri-input';
+  
+    // Submit button for adding the influence
+    const submitInfluenceButton = createButton('Submit', () => submitInfluence(playlistId, influenceUriInput));
+    submitInfluenceButton.className = 'submit-influence-button';
+  
+    // Append the input and submit button to the addInfluenceDiv
+    addInfluenceDiv.appendChild(influenceUriInput);
+    addInfluenceDiv.appendChild(submitInfluenceButton);
+  
+    return { addInfluenceButton, addInfluenceDiv };
+}
+
+// Function to toggle the add influence input field
+function toggleAddInfluenceInput(event) {
+    const playlistId = event.target.getAttribute('data-playlist-id');
+    hideOtherSections(playlistId, 'add-influence');
+    const addInfluenceDiv = document.getElementById(`add-influence-for-${playlistId}`);
+    addInfluenceDiv.style.display = addInfluenceDiv.style.display === 'none' ? 'block' : 'none';
+}
+
+// Function to submit the influence and clear the input
+async function submitInfluence(playlistId, influenceUriInput) {
+    try {
+      // You would have an API call here to add the influence
+      await apiWrapper.createInfluence(playlistId, { uri: url_to_id(influenceUriInput.value, "playlist") });
+      // Clear the input field after successful submission
+      influenceUriInput.value = '';
+      // Hide the add influence section after submission
+      const addInfluenceDiv = document.getElementById(`add-influence-for-${playlistId}`);
+      if (addInfluenceDiv) {
+        addInfluenceDiv.style.display = 'none';
+      }
+    } catch (error) {
+      console.error('Error adding influence:', error);
+      alert('Failed to add influence');
+    }
+}
 
 
 
@@ -285,7 +341,7 @@ async function deletePlaylist(playlistId) {
 
 // Function to hide all sections except the one that is being toggled
 function hideOtherSections(playlistId, sectionToShow) {
-  const sections = ['tracklist', 'influence', 'add-track'];
+  const sections = ['tracklist', 'influence', 'add-track', 'add-influence'];
   sections.forEach(section => {
     if (section !== sectionToShow) {
       const div = document.getElementById(`${section}-for-${playlistId}`);
@@ -296,7 +352,7 @@ function hideOtherSections(playlistId, sectionToShow) {
   });
 
   // Also remove the active class from all buttons except the one clicked
-  const buttons = ['tracklist', 'influence', 'add-track'];
+  const buttons = ['tracklist', 'influence', 'add-track', 'add-influence'];
   buttons.forEach(button => {
     if (button !== sectionToShow) {
       const btn = document.querySelector(`[data-playlist-id="${playlistId}"].${button}-btn`);
