@@ -84,7 +84,27 @@ const apiWrapper = {
       }
     });
     return await response.json();
-  }
+  },
+  async getPriorityTracks(playlistId) {
+    const response = await fetch(`${API_URL}/Playlist/${playlistId}/Track`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    return await response.json();
+  },
+  async createPriorityTrack(playlistId, trackId) {
+    const response = await fetch(`${API_URL}/Playlist/${playlistId}/Track?${trackId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+    });
+    return await response.json();
+  },
+  
+  
 };
 
 export default apiWrapper;

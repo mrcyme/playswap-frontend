@@ -46,51 +46,6 @@ async function createPlaylist() {
     }
 }
 
-
-async function showPlaylists() {
-    try {
-        const playlists = await apiWrapper.getPlaylists();
-        const container = document.getElementById('dashboard');
-        container.innerHTML = '';
-
-        if (playlists && playlists.length > 0) {
-            playlists.forEach(playlist => {
-                const div = document.createElement('div');
-                div.className = 'playlist';
-                
-                const deleteButton = document.createElement('button');
-                deleteButton.innerText = 'Delete';
-                deleteButton.addEventListener('click', () => deletePlaylist(playlist.id));
-                
-                div.innerHTML = `
-                    <h3>${playlist.title}</h3>
-                    <p>${playlist.description}</p>
-                `;
-                div.appendChild(deleteButton);
-                container.appendChild(div);
-            });
-        } else {
-            container.innerText = 'No playlists found';
-        }
-    } catch (error) {
-        console.error('Error fetching playlists', error);
-        document.getElementById('dashboard').innerText = 'Failed to load playlists';
-    }
-}
-
-
-async function deletePlaylist(playlistId) {
-    try {
-        await apiWrapper.deletePlaylist(playlistId);
-        await showPlaylists();  // Refresh the playlist display
-    } catch (error) {
-        console.error('Error deleting playlist:', error);
-        alert('Failed to delete playlist');
-    }
-}
-
-
-
 function addInfluence() {
     // Create a new input field
     const newInfluenceInput = document.createElement('input');
@@ -112,6 +67,139 @@ function addInfluence() {
     const influencesContainer = document.getElementById('influencesContainer');
     influencesContainer.appendChild(newRow);
 }
+
+
+async function showPlaylists() {
+    try {
+        const playlists = await apiWrapper.getPlaylists();
+        const container = document.getElementById('dashboard');
+        container.innerHTML = '';
+
+        if (playlists && playlists.length > 0) {
+            playlists.forEach(playlist => {
+                const div = document.createElement('div');
+                div.className = 'playlist';
+                
+                // Create the tracklist button
+                const tracklistButton = document.createElement('button');
+                tracklistButton.innerText = 'Tracklist';
+                // Set a data attribute to store the playlist ID
+                tracklistButton.setAttribute('data-playlist-id', playlist.id);
+                tracklistButton.addEventListener('click', toggleTracklist);
+                
+                // Create the delete button
+                const deleteButton = document.createElement('button');
+                deleteButton.innerText = 'Delete';
+                deleteButton.addEventListener('click', () => deletePlaylist(playlist.id));
+
+                // Create the influence button
+                const influenceButton = document.createElement('button');
+                influenceButton.innerText = 'Influences';
+                // Set a data attribute to store the playlist ID
+                influenceButton.setAttribute('data-playlist-id', playlist.id);
+                influenceButton.addEventListener('click', toggleInfluenceList);
+                
+                div.innerHTML = `
+                    <h3>${playlist.title}</h3>
+                `;  
+                
+                // Immediately create and append the tracklistDiv after the tracklistButton
+                // Give your tracklistDiv a unique ID based on the playlist ID
+                const tracklistDiv = document.createElement('div');
+                tracklistDiv.id = `tracklist-${playlist.id}`;
+                tracklistDiv.className = 'tracklist';
+                tracklistDiv.style.display = 'none'; // Initially hide the tracklist
+
+                // Append the elements to the playlist div
+
+                // Placeholder element for the influence list
+                const influenceDiv = document.createElement('div');
+                influenceDiv.id = `influence-for-${playlist.id}`; // Ensure this ID is unique
+                influenceDiv.className = 'influence';
+                influenceDiv.style.display = 'none'; // Initially hide the influence list
+                
+                // Append the buttons and tracklistDiv in the correct order
+                div.appendChild(tracklistButton);
+                div.appendChild(influenceButton);
+                div.appendChild(deleteButton);
+                div.appendChild(tracklistDiv); // The tracklistDiv is now in between the tracklistButton and deleteButton
+                div.appendChild(influenceDiv);
+                container.appendChild(div);
+            });
+        } else {
+            container.innerText = 'No playlists found';
+        }
+    } catch (error) {
+        console.error('Error fetching playlists', error);
+        document.getElementById('dashboard').innerText = 'Failed to load playlists';
+    }
+}
+
+async function toggleTracklist(event) {
+    const playlistId = event.target.getAttribute('data-playlist-id');
+    // Use getElementById to select the tracklistDiv directly
+    const tracklistDiv = document.getElementById(`tracklist-${playlistId}`);
+    // Check if tracklist is already loaded
+    if (tracklistDiv.innerHTML === '') {
+        // Call the method to get the tracklist from the API
+        try {
+            
+            const playlist = await apiWrapper.getPlaylist(playlistId);
+            // Map each track to a list item string
+            const tracksHtml = playlist.tracks.map(track => `<li>${track.title} by ${track.artists}</li>`).join('');
+            tracklistDiv.innerHTML = `<ul>${tracksHtml}</ul>`;
+            tracklistDiv.style.display = 'block';
+        } catch (error) {
+            console.error('Error fetching tracklist', error);
+            tracklistDiv.innerText = 'Failed to load tracklist';
+        }
+    } else {
+        // Toggle display of the tracklist
+        tracklistDiv.style.display = tracklistDiv.style.display === 'none' ? 'block' : 'none';
+    }
+    // Inside the toggleTracklist function, before toggling the tracklist
+    if (tracklistDiv.style.display === '' || tracklistDiv.style.display === 'none') {
+        event.target.classList.add('button-active');
+    } else {
+        event.target.classList.remove('button-active');
+    }
+}
+
+// New function to toggle the influence list
+async function toggleInfluenceList(event) {
+    const playlistId = event.target.getAttribute('data-playlist-id');
+    const influenceDivId = `influence-for-${playlistId}`;
+    const influenceDiv = document.getElementById(influenceDivId);
+
+    // Check if the influence list is already loaded
+    if (influenceDiv.innerHTML === '') {
+        try {
+            const influences = await apiWrapper.getInfluences(playlistId);
+            // Map each influence to a list item string
+            const influencesHtml = influences.map(influence => `<li>URI: ${influence.uri}</li>`).join('');
+            influenceDiv.innerHTML = `<ul>${influencesHtml}</ul>`;
+            influenceDiv.style.display = 'block'; // Show the influence list
+        } catch (error) {
+            console.error('Error fetching influence list', error);
+            influenceDiv.innerText = 'Failed to load influence list';
+        }
+    } else {
+        // Toggle display of the influence list
+        influenceDiv.style.display = influenceDiv.style.display === 'none' ? 'block' : 'none';
+    }
+}
+
+
+async function deletePlaylist(playlistId) {
+    try {
+        await apiWrapper.deletePlaylist(playlistId);
+        await showPlaylists();  // Refresh the playlist display
+    } catch (error) {
+        console.error('Error deleting playlist:', error);
+        alert('Failed to delete playlist');
+    }
+}
+
 
 
 
