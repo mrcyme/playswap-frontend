@@ -17,11 +17,12 @@ function showTab(tabId) {
 async function submitGetPlaylists() {
     try {
         const playlists = await playswapApiWrapper.getPlaylists();
+        const approvedPlaylists = playlists.filter(playlist => playlist.isApproved);
         const container = document.getElementById('dashboard');
         container.innerHTML = '';
 
-        if (playlists && playlists.length > 0) {
-            playlists.forEach(playlist => {
+        if (approvedPlaylists && approvedPlaylists.length > 0) {
+            approvedPlaylists.forEach(playlist => {
                 const div = createPlaylistDiv(playlist);
                 container.appendChild(div);
             });
@@ -36,12 +37,13 @@ async function submitGetPlaylists() {
 
 async function submitGetCandidatePlaylists() {
     try {
-        const playlists = await playswapApiWrapper.getCandidatePlaylists();
+        const playlists = await playswapApiWrapper.getPlaylists();
+        const candidatePlaylists = playlists.filter(playlist => !playlist.isApproved);
         const container = document.getElementById('candidate');
         container.innerHTML = '';
 
-        if (playlists && playlists.length > 0) {
-            playlists.forEach(playlist => {
+        if (candidatePlaylists && candidatePlaylists.length > 0) {
+                candidatePlaylists.forEach(playlist => {
                 const div = createPlaylistDiv(playlist);
                 container.appendChild(div);
             });

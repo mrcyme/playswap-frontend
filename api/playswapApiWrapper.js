@@ -28,6 +28,7 @@ const playswapApiWrapper = {
 
   async getPlaylist(playlistId) {
     const token = localStorage.getItem('token') || '';
+    console.log(token)
     const response = await fetch(`${API_URL}/Playlist/${playlistId}`, {
       headers: {
         'Authorization': `Bearer ${token}`
@@ -38,19 +39,6 @@ const playswapApiWrapper = {
 
 
   async getPlaylists() {
-    const token = localStorage.getItem('token') || '';
-    const response = await fetch(`${API_URL}/Playlist/`, {
-        headers: {
-            'Authorization': `Bearer ${token}`
-        }
-    });
-    if (!response.ok) {
-        throw new Error('Network response was not ok ' + response.statusText);
-    }
-    return await response.json();
-  },
-
-  async getCandidatePlaylists() {
     const token = localStorage.getItem('token') || '';
     const response = await fetch(`${API_URL}/Playlist/`, {
         headers: {

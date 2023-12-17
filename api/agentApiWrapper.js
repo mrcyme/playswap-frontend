@@ -1,8 +1,20 @@
-const API_URL = 'https://playswap-s.net';
+const API_URL = 'http://127.0.0.1:5000'
 const agentApiWrapper = {
 
   async createUser(userData) {
     const response = await fetch(`${API_URL}/users`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(userData)
+    });
+    const user = await response.json();
+    return user;
+  },
+
+  async loginUser(userData) {
+    const response = await fetch(`${API_URL}/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -26,6 +38,7 @@ const agentApiWrapper = {
   },
 
   async createAgent(agentData) {
+    console.log(agentData)
     const response = await fetch(`${API_URL}/agents`, {
       method: 'POST',
       headers: {
