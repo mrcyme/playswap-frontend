@@ -1,39 +1,23 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Playlist App</title>
+    <title>Home Page</title>
     <link rel="stylesheet" href="styles.css">
-    <script type="module" src="scripts.js"></script>
+    <script type="module" src="app.js"></script>
 </head>
 <body>
-
-<div class="token-input-container">
-    <input type="text" placeholder="Token" id="tokenInput">
-    <button id="setTokenButton">Set Token</button>
-</div>
-    
-<div class="tabs">
-    <button id="showCreateTab">Create</button>
-    <button id="showDashboardTab">Dashboard</button>
-</div>
-
-<div id="create" class="tab-content">
-    <input type="text" placeholder="Name" id="name">
-    <input type="text" placeholder="Description" id="description">
-    <div id="influencesContainer">
-        <div class="influence-row">
-            <input type="text" placeholder="Influence 1" name="influence1" class="influence-input">
-            <button id="addInfluenceButton">Add Influence</button>
-        </div>
+    <div id="loginContainer">
+        <h2>Login</h2>
+        <input type="text" id="loginEmail" placeholder="Email">
+        <input type="password" id="loginPassword" placeholder="Password">
+        <button id="loginButton">Login</button>
     </div>
-    <button id="createPlaylistButton">Create</button>
-</div>
 
-<div id="dashboard" class="tab-content">
-    
-</div>
-
+    <div id="signupContainer">
+        <h2>Signup (enter your playswap credentials)</h2>
+        <input type="text" id="signupEmail" placeholder="Email">
+        <input type="password" id="signupPassword" placeholder="Password">
+        <button id="signupButton">Signup</button>
+    </div>
 </body>
 </html>

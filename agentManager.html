@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Playlist App</title>
+    <link rel="stylesheet" href="styles.css">
+    <script type="module" src="agentManager.js"></script>
+    <script type="module" src="loadHeader.js"></script>
+</head>
+
+<body>
+<div id="headerContainer"></div>
+
+<div class="tabs">
+    <button id="showCreateTab">Create</button>
+    <button id="showDashboardTab">My Agents</button>
+</div>
+
+<div id="create">
+    <label for="url">URL:</label>
+    <input type="text" id="url" name="url">
+
+    <label for="type">Type:</label>
+    <select id="type" name="type">
+        <option value="movie">Movie</option>
+        <option value="album">Album</option>
+    </select>
+    <button id="createPlaylistButton">Create</button>
+</div>
+
+
+
+
+<div id="dashboard" class="tab-content"></div>
+<div id="candidate" class="tab-content"></div>
+</body>
+</html>

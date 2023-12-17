@@ -1,13 +1,20 @@
 const API_URL = 'https://playswap-server.azurewebsites.net';
 //const API_URL = 'http://localhost:5240';
-let token = '';
 
-const apiWrapper = {
-  setToken(newToken) {
-    token = newToken;
-    console.log(token)
+
+const playswapApiWrapper = {
+  async login(email, password) {
+    const response = await fetch(`${API_URL}/Account/login?Email=${email}&Password=${password}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+    });
+    return await response.json();
   },
+
   async createPlaylist(data) {
+    const token = localStorage.getItem('token') || '';
     const response = await fetch(`${API_URL}/Playlist/`, {
       method: 'POST',
       headers: {
@@ -18,7 +25,9 @@ const apiWrapper = {
     });
     return await response.json();
   },
+
   async getPlaylist(playlistId) {
+    const token = localStorage.getItem('token') || '';
     const response = await fetch(`${API_URL}/Playlist/${playlistId}`, {
       headers: {
         'Authorization': `Bearer ${token}`
@@ -26,7 +35,10 @@ const apiWrapper = {
     });
     return await response.json();
   },
+
+
   async getPlaylists() {
+    const token = localStorage.getItem('token') || '';
     const response = await fetch(`${API_URL}/Playlist/`, {
         headers: {
             'Authorization': `Bearer ${token}`
@@ -37,7 +49,22 @@ const apiWrapper = {
     }
     return await response.json();
   },
+
+  async getCandidatePlaylists() {
+    const token = localStorage.getItem('token') || '';
+    const response = await fetch(`${API_URL}/Playlist/`, {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    });
+    if (!response.ok) {
+        throw new Error('Network response was not ok ' + response.statusText);
+    }
+    return await response.json();
+  },
+
   async updatePlaylist(playlistId, data) {
+    const token = localStorage.getItem('token') || '';
     const response = await fetch(`${API_URL}/Playlist/${playlistId}`, {
       method: 'PUT',
       headers: {
@@ -46,9 +73,12 @@ const apiWrapper = {
       },
       body: JSON.stringify(data),
     });
+    console.log(response)
     return await response.json();
   },
+
   async deletePlaylist(playlistId) {
+    const token = localStorage.getItem('token') || '';
     const response = await fetch(`${API_URL}/Playlist/${playlistId}`, {
       method: 'DELETE',
       headers: {
@@ -58,6 +88,7 @@ const apiWrapper = {
     return await response.json();
   },
   async getInfluences(playlistId) {
+    const token = localStorage.getItem('token') || '';
     const response = await fetch(`${API_URL}/Playlist/${playlistId}/Influence`, {
       headers: {
         'Authorization': `Bearer ${token}`
@@ -66,6 +97,7 @@ const apiWrapper = {
     return await response.json();
   },
   async createInfluence(playlistId, data) {
+    const token = localStorage.getItem('token') || '';
     const response = await fetch(`${API_URL}/Playlist/${playlistId}/Influence`, {
       method: 'POST',
       headers: {
@@ -77,6 +109,7 @@ const apiWrapper = {
     return await response.json();
   },
   async deleteInfluences(playlistId) {
+    const token = localStorage.getItem('token') || '';
     const response = await fetch(`${API_URL}/Playlist/${playlistId}/Influence`, {
       method: 'DELETE',
       headers: {
@@ -86,6 +119,7 @@ const apiWrapper = {
     return await response.json();
   },
   async getPriorityTracks(playlistId) {
+    const token = localStorage.getItem('token') || '';
     const response = await fetch(`${API_URL}/Playlist/${playlistId}/Track`, {
       headers: {
         'Authorization': `Bearer ${token}`
@@ -94,6 +128,7 @@ const apiWrapper = {
     return await response.json();
   },
   async createPriorityTrack(playlistId, trackId) {
+    const token = localStorage.getItem('token') || '';
     const response = await fetch(`${API_URL}/Playlist/${playlistId}/Track?spotifyTrackUri=${trackId}`, {
       method: 'POST',
       headers: {
@@ -103,8 +138,9 @@ const apiWrapper = {
     });
     return await response.json();
   },
+
   
   
 };
 
-export default apiWrapper;
+export default playswapApiWrapper;
