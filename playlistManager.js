@@ -1,4 +1,5 @@
 import playswapApiWrapper from './api/playswapApiWrapper.js';
+
 // On page load, show the 'Create Playlist' tab
 window.onload = function() {
     showTab('create');
@@ -14,7 +15,7 @@ function showTab(tabId) {
 // HANDLERS FOR playswapApiWrapper FUNCTIONS
 
 
-async function submitGetPlaylists() {
+async function displayApprovedPlaylists() {
     try {
         const playlists = await playswapApiWrapper.getPlaylists();
         const approvedPlaylists = playlists.filter(playlist => playlist.isApproved);
@@ -35,7 +36,7 @@ async function submitGetPlaylists() {
     }
 }
 
-async function submitGetCandidatePlaylists() {
+async function displayCandidatePlaylists() {
     try {
         const playlists = await playswapApiWrapper.getPlaylists();
         const candidatePlaylists = playlists.filter(playlist => !playlist.isApproved);
@@ -44,7 +45,7 @@ async function submitGetCandidatePlaylists() {
 
         if (candidatePlaylists && candidatePlaylists.length > 0) {
                 candidatePlaylists.forEach(playlist => {
-                const div = createPlaylistDiv(playlist);
+                const div = createPlaylistDiv(playlist, true);
                 container.appendChild(div);
             });
         } else {
@@ -69,7 +70,7 @@ async function submitCreatePlaylist() {
   
     for (let i = 0; i < influenceInputs.length; i++) {
       if (influenceInputs[i].value){
-      influences.push({ uri: url_to_id(influenceInputs[i].value, "playlist") });
+      influences.push({ spotifyId: url_to_id(influenceInputs[i].value, "playlist") });
       }
     }
   
@@ -93,7 +94,6 @@ async function submitCreatePlaylist() {
         const updatePlaylistData = {
             coverImage: updateData
           };
-        console.log(updatePlaylistData);
         playswapApiWrapper.updatePlaylist(createdPlaylist.id, updatePlaylistData);
       }).catch(error => {
         console.error(error);
@@ -120,13 +120,24 @@ async function submitCreatePlaylist() {
 async function submitDeletePlaylist(playlistId) {
     try {
         await playswapApiWrapper.deletePlaylist(playlistId);
-        await submitGetPlaylists();  // Refresh the playlist display
+        await displayApprovedPlaylists()
+        //await displayApprovedPlaylists();  // Refresh the playlist display
     } catch (error) {
         console.error('Error deleting playlist:', error);
         alert('Failed to delete playlist');
     }
 }
 
+async function approvePlaylist(playlistId) {
+  try {
+      await playswapApiWrapper.approvePlaylist(playlistId);
+      await displayApprovedPlaylists();
+      showTab('dashboard');
+  } catch (error) {
+      console.error('Error deleting playlist:', error);
+      alert('Failed to delete playlist');
+  }
+}
   
   // Function to submit the track and clear the input
 async function submitAddTrack(playlistId, trackUrlInput) {
@@ -147,12 +158,12 @@ async function submitAddTrack(playlistId, trackUrlInput) {
   }
 
 // Function to submit the influence and clear the input
-async function submitAddInfluence(playlistId, influenceUriInput) {
+async function submitAddInfluence(playlistId, influenceIdInput) {
     try {
       // You would have an API call here to add the influence
-      await playswapApiWrapper.createInfluence(playlistId, { uri: url_to_id(influenceUriInput.value, "playlist") });
+      await playswapApiWrapper.createInfluence(playlistId, { spotifyId: url_to_id(influenceIdInput.value, "playlist") });
       // Clear the input field after successful submission
-      influenceUriInput.value = '';
+      influenceIdInput.value = '';
       // Hide the add influence section after submission
       const addInfluenceDiv = document.getElementById(`add-influence-for-${playlistId}`);
       if (addInfluenceDiv) {
@@ -168,19 +179,18 @@ async function submitAddInfluence(playlistId, influenceUriInput) {
 async function submitEditDetails(playlistId, title, description, files) {
     try {
         getBase64String(files).then(updateData => {
-            console.log(updateData);
-            const data = {
-                name: title,
+            let data = {
+                title: title,
                 description: description,
                 coverImage: updateData
             };
-            console.log(data);
+            data = filterNullAndEmptySting(data);
             playswapApiWrapper.updatePlaylist(playlistId, data);
           }).catch(error => {
             console.error(error);
           });
         alert('Playlist updated successfully!');
-        await submitGetPlaylists(); // Refresh the playlists display
+        await displayApprovedPlaylists(); // Refresh the playlists display
 
     } catch (error) {
         throw error;
@@ -214,25 +224,25 @@ function addInfluenceInput() {
 
 
 
-function createPlaylistDiv(playlist) {
+function createPlaylistDiv(playlist, isCandidate = false) {
     const div = document.createElement('div');
     div.className = 'playlist';
 
     // Check if the playlist has a Spotify URI and convert it to an anchor tag if it exists
     if (playlist.spotifyURI) {
         const url = uri_to_url(playlist.spotifyURI); // Ensure that uri_to_url function exists and works as expected
-        div.innerHTML = `<h3><a href="${url}" target="_blank">${playlist.title}</a></h3>`;
+        div.innerHTML = `<h3><a href="${url}" target="_blank">${playlist.title}</a></h3><p>${playlist.description}</p>`;
     } else {
-        div.innerHTML = `<h3>${playlist.title}</h3>`;
+        div.innerHTML = `<h3>${playlist.title}</h3><p>${playlist.description}</p>`;
     }
 
     const tracklistButton = createButton('Tracklist', toggleTracklist, playlist.id);
     const deleteButton = createButton('Delete', () => submitDeletePlaylist(playlist.id));
+    const appoveButton = createButton('Approve', () => approvePlaylist(playlist.id));
     const influenceButton = createButton('Influences', toggleInfluenceList, playlist.id);
 
     const tracklistDiv = createTracklistDiv(playlist.id);
     const influenceDiv = createInfluenceDiv(playlist.id);
-
     // Create and append the "Add Track" button and its div
     const { addTrackButton, addTrackDiv } = createAddTrackElements(playlist.id);// Create and append the "Add Influence" button and its div
     const { addInfluenceButton, addInfluenceDiv } = createAddInfluenceElements(playlist.id);
@@ -244,6 +254,10 @@ function createPlaylistDiv(playlist) {
     div.appendChild(addInfluenceButton); // Append the "Add Influence" button
     div.appendChild(editDetailsButton); // Append the "Edit Details" button
     div.appendChild(deleteButton);
+    if (isCandidate){
+      div.appendChild(appoveButton);
+    }
+    
     div.appendChild(tracklistDiv);
     div.appendChild(influenceDiv);
     div.appendChild(addTrackDiv); // Append the div for adding tracks
@@ -351,17 +365,17 @@ function createAddInfluenceElements(playlistId) {
     addInfluenceDiv.style.display = 'none';
   
     // Input for the influence URL
-    const influenceUriInput = document.createElement('input');
-    influenceUriInput.type = 'text';
-    influenceUriInput.placeholder = 'Influence URL';
-    influenceUriInput.className = 'influence-uri-input';
+    const influenceIdInput = document.createElement('input');
+    influenceIdInput.type = 'text';
+    influenceIdInput.placeholder = 'Influence URL';
+    influenceIdInput.className = 'influence-id-input';
   
     // Submit button for adding the influence
-    const submitInfluenceButton = createButton('Submit', () => submitAddInfluence(playlistId, influenceUriInput));
+    const submitInfluenceButton = createButton('Submit', () => submitAddInfluence(playlistId, influenceIdInput));
     submitInfluenceButton.className = 'submit-influence-button';
   
     // Append the input and submit button to the addInfluenceDiv
-    addInfluenceDiv.appendChild(influenceUriInput);
+    addInfluenceDiv.appendChild(influenceIdInput);
     addInfluenceDiv.appendChild(submitInfluenceButton);
   
     return { addInfluenceButton, addInfluenceDiv };
@@ -385,7 +399,6 @@ async function toggleTracklist(event) {
     if (tracklistDiv.innerHTML === '') {
         // Call the method to get the tracklist from the API
         try {
-            
             const playlist = await playswapApiWrapper.getPlaylist(playlistId);
             // Map each track to a list item string
             const tracksHtml = playlist.tracks.map(track => `<li>${track.title} by ${track.artists}</li>`).join('');
@@ -419,7 +432,8 @@ async function toggleInfluenceList(event) {
         try {
             const influences = await playswapApiWrapper.getInfluences(playlistId);
             // Map each influence to a list item string
-            const influencesHtml = influences.map(influence => `<li>URI: ${influence.uri}</li>`).join('');
+            const influencesHtml = influences.map(influence => 
+              `<li><a href="${id_to_url(influence.spotifyId, 'playlist')}" target="_blank">${influence.spotifyId}</a></li>`).join('');
             influenceDiv.innerHTML = `<ul>${influencesHtml}</ul>`;
             influenceDiv.style.display = 'block'; // Show the influence list
         } catch (error) {
@@ -489,12 +503,12 @@ document.addEventListener('DOMContentLoaded', (event) => {
     if (dashboardTabButton) {
         dashboardTabButton.addEventListener('click', async () => {
             showTab('dashboard');
-            await submitGetPlaylists();
+            await displayApprovedPlaylists();
         });
     if (candidateTabButton) {
         candidateTabButton.addEventListener('click', async () => {
             showTab('candidate');
-            await submitGetCandidatePlaylists();
+            await displayCandidatePlaylists();
         });
     }
     };
@@ -526,6 +540,15 @@ function uri_to_url(uri) {
       throw new Error('Invalid Spotify URI');
     }
   }
+
+function id_to_url(id, type) {
+    if (!['track', 'playlist', 'album'].includes(type)) {
+      throw new Error('Invalid type specified. Type must be one of "track", "playlist", or "album".');
+    }
+
+    return `https://open.spotify.com/${type}/${id}`;
+}
+
   
 
 
@@ -543,8 +566,18 @@ function uri_to_url(uri) {
         };
         fileReader.readAsDataURL(files[0]);
       } else {
-        reject(new Error("No files provided")); // Reject the Promise if no files were provided
+        const imageBase64 = '';
+        resolve(imageBase64);
       }
     });
   }
   
+
+  function filterNullAndEmptySting(obj) {
+    return Object.entries(obj).reduce((acc, [key, value]) => {
+        if (value !== null && value !== '') {
+            acc[key] = value;
+        }
+        return acc;
+    }, {});
+}

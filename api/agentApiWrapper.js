@@ -37,6 +37,11 @@ const agentApiWrapper = {
     return agent;
   },
 
+  async getAgentsByUser(user_id) {
+    const response = await fetch(`${API_URL}/agents/user/${user_id}`);
+    return await response.json();
+  },
+
   async createAgent(agentData) {
     console.log(agentData)
     const response = await fetch(`${API_URL}/agents`, {
@@ -50,7 +55,24 @@ const agentApiWrapper = {
     return createdAgent;
   },
 
+  async runAgent(id) {
+    const user_id = localStorage.getItem('user_id') || '';
+    const data={
+      user_id: user_id
+    }
+    const response = await fetch(`${API_URL}/agents/${id}/run`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data),
+    });
+    const runAgent = await response.json();
+    return runAgent;
+  },
+
   async updateAgent(id, agentData) {
+    console.log(agentData)
     const response = await fetch(`${API_URL}/agents/${id}`, {
       method: 'PUT',
       headers: {
@@ -63,8 +85,16 @@ const agentApiWrapper = {
   },
 
   async deleteAgent(id) {
+    const user_id = localStorage.getItem('user_id') || '';
+    const data={
+      user_id: user_id
+    }
     const response = await fetch(`${API_URL}/agents/${id}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data),
     });
     const deletedAgent = await response.json();
     return deletedAgent;

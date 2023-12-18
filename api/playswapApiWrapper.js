@@ -51,6 +51,18 @@ const playswapApiWrapper = {
     return await response.json();
   },
 
+  async approvePlaylist(playlistId) {
+    const token = localStorage.getItem('token') || '';
+    const response = await fetch(`${API_URL}/Playlist/${playlistId}/approve`, {
+      method: 'PUT',
+      headers: { 
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    return await response.json();
+  },
+
+
   async updatePlaylist(playlistId, data) {
     const token = localStorage.getItem('token') || '';
     const response = await fetch(`${API_URL}/Playlist/${playlistId}`, {
