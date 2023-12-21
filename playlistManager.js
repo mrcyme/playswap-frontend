@@ -496,6 +496,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
     const addInfluenceButton = document.getElementById('addInfluenceButton');
     const createPlaylistButton = document.getElementById('createPlaylistButton');
     const candidateTabButton = document.getElementById('showCandidateTabButton');
+    const importPlaylistButton = document.getElementById('importPlaylistsButton');
+    if (importPlaylistButton) importPlaylistButton.addEventListener('click', playswapApiWrapper.importSpotifyPlaylist);
     if (createTabButton) createTabButton.addEventListener('click', () => showTab('create'));
     if (setTokenButton) setTokenButton.addEventListener('click', setToken);
     if (addInfluenceButton) addInfluenceButton.addEventListener('click', addInfluenceInput);

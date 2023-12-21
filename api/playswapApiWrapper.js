@@ -87,6 +87,21 @@ const playswapApiWrapper = {
     });
     return await response.json();
   },
+
+  async importSpotifyPlaylist() {
+    const token = localStorage.getItem('token') || '';
+    console.log("yoooo")
+    const response = await fetch(`${API_URL}/Playlist/spotify/import`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      } 
+      ,
+    });
+    return await response.json();
+  },
+
   async getInfluences(playlistId) {
     const token = localStorage.getItem('token') || '';
     const response = await fetch(`${API_URL}/Playlist/${playlistId}/Influence`, {

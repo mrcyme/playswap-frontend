@@ -14,6 +14,7 @@ async function login() {
     if (dbResponse.playswap_token) {
         localStorage.setItem('token', dbResponse.playswap_token);
         localStorage.setItem('user_id', dbResponse.user_id);
+        console.log("Login successful. Redirecting to playlist manager.")
         window.location.href = 'playlistManager.html';  // Redirect to playlistManager.html
     } else {
         alert('Login failed');
